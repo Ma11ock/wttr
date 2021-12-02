@@ -1,39 +1,203 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:http/http.dart' as http;
 
-const Duration UPD_INTERVAL = const Duration(minutes: 10);
-// Last time the weather information was fetched.
-DateTime? lastTime = null;
 // Weather app key.
 const String WTTR_KEY = '1473cbe9b65e8b1d60d7b15f1614607a';
 // City name
-const String RQST_STR1 = 'api.openweathermap.org/data/2.5/weather?q={%s}&appid={%s}';
+const String RQST_STR1 = 'https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s';
 // City name, state
-const String RQST_STR2 = 'api.openweathermap.org/data/2.5/weather?q={%s},{%s}&appid={%s}';
+const String RQST_STR2 = 'https://api.openweathermap.org/data/2.5/weather?q=%s,%s&appid=%s';
 // City name, state, country code
-const String RQST_STR3 = 'api.openweathermap.org/data/2.5/weather?q={%s},{%s},{%s}&appid={%s}';
+const String RQST_STR3 = 'https://api.openweathermap.org/data/2.5/weather?q=%s,%s,%s&appid=%s';
 
-// Get weather data. Only fetches every 10 minutes.
-Future<String> fetchWeatherData() async
+class ApiBaseHelper
 {
-  Duration sinceLastTime;
-  if(lastTime == null)
-  {
-    lastTime = DateTime.now();
-    sinceLastTime = new Duration(minutes: 10);
-  }
-  else
-    sinceLastTime = new Duration(milliseconds: DateTime.now().millisecondsSinceEpoch - lastTime!.millisecondsSinceEpoch);
 
-  if(sinceLastTime >= UPD_INTERVAL)
-  {
-    final response = await http.get(Uri.parse(sprintf(RQST_STR1, ['Corvallis', WTTR_KEY])));
 
-    if(response == 200)
-    {
-
+// Get weather data.
+Future<dynamic> get() async
+{
+    var responseJson;
+    try {
+      final response = await http.get(
+          Uri.parse(sprintf(RQST_STR1, ['Corvallis', WTTR_KEY])));
+      responseJson = _getWeatherList(response);
     }
-  }
-  return Future.value('test');
+    on SocketException
+    {
+      throw FetchDataException("No internet connection");
+    }
+
+  return responseJson;
 }
 
+dynamic _getWeatherList(http.Response response)
+{
+  switch(response.statusCode)
+  {
+    case 200:
+      return jsonDecode(response.body);
+      break;
+    case 400:
+      throw BadRequestException(response.body.toString());
+      break;
+    case 401:
+    case 403:
+      throw UnauthorisedException(response.body.toString());
+      break;
+    case 429:
+      throw UnauthorisedException('429: ${response.body.toString()}');
+      break;
+    default:
+      throw FetchDataException(
+          'Error occured while Communication with Server with StatusCode : ${response.statusCode}');
+      break;
+  }
+}
+}
+
+class WeatherResponse
+{
+  late int totalResults;
+  late List<WeatherInfo> results;
+
+  WeatherResponse.fromJson(Map<String, dynamic> json)
+  {
+    totalResults = json['cnt'];
+    if(json['list'] != null)
+      {
+        results = <WeatherInfo>[];
+        json['list'].forEach((v)
+        {
+          results.add(WeatherInfo.fromJson(v));
+        });
+      }
+  }
+}
+
+class WeatherInfo
+{
+  late int id;
+  late String main;
+  late String desc;
+  late String temp;
+  late String feelsLike;
+  late String tempMin;
+  late String tempMax;
+  late String humidity;
+  late String windSpeed;
+  late DateTime when;
+
+  WeatherInfo.fromJson(Map<String, dynamic> json)
+  {
+    id = json['weather'][0]['id'];
+    main = json['weather'][0]['main'];
+    desc = json['weather'][0]['description'];
+    temp = json['main']['temp'];
+    feelsLike = json['main']['feels_like'];
+    tempMin = json['main']['temp_min'];
+    tempMax = json['main']['temp_max'];
+    humidity = json['main']['humidity'];
+    windSpeed = json['wind']['speed'];
+    when = DateTime.parse(json['dt_txt']);
+  }
+
+}
+
+class AppException implements Exception {
+  final _message;
+  final _prefix;
+
+  AppException([this._message, this._prefix]);
+
+  String toString() {
+    return "$_prefix$_message";
+  }
+}
+
+class ApiResponse<T>
+{
+  late Status status;
+  late T data;
+  late String message;
+
+  ApiResponse.loading(this.message) : status = Status.LOADING;
+  ApiResponse.completed(this.data) : status = Status.COMPLETED;
+  ApiResponse.error(this.message) : status = Status.ERROR;
+
+  @override
+  String toString()
+  {
+    return "Status : $status \n Message : $message \n Data : $data";
+  }
+}
+
+enum Status { LOADING, COMPLETED, ERROR }
+
+class WeatherRepository
+{
+  ApiBaseHelper _helper = ApiBaseHelper();
+
+  Future<List<WeatherInfo>> fetchWeatherList() async {
+    final response = await _helper.get();
+    return WeatherResponse.fromJson(response).results;
+  }
+}
+
+class WeatherBloc
+{
+  WeatherRepository? _weatherRepository;
+
+  final StreamController<ApiResponse<List<WeatherInfo>>> _weatherListController = StreamController<ApiResponse<List<WeatherInfo>>>();
+
+  StreamSink<ApiResponse<List<WeatherInfo>>> get weatherListSink =>
+      _weatherListController.sink;
+
+  Stream<ApiResponse<List<WeatherInfo>>> get weatherListStream =>
+      _weatherListController.stream;
+
+  WeatherBloc()
+  {
+    _weatherRepository = WeatherRepository();
+    fetchWeatherList();
+  }
+
+  fetchWeatherList() async
+  {
+    weatherListSink.add(ApiResponse.loading('Fetching Popular Weathers'));
+    try {
+      List<WeatherInfo> weathers = await _weatherRepository!.fetchWeatherList();
+      weatherListSink.add(ApiResponse.completed(weathers));
+    } catch (e) {
+      weatherListSink.add(ApiResponse.error(e.toString()));
+      print(e);
+    }
+  }
+
+  dispose()
+  {
+    _weatherListController.close();
+  }
+}
+
+class FetchDataException extends AppException {
+  FetchDataException([String? message])
+      : super(message, "Error During Communication: ");
+}
+
+class BadRequestException extends AppException {
+  BadRequestException([message]) : super(message, "Invalid Request: ");
+}
+
+class UnauthorisedException extends AppException {
+  UnauthorisedException([message]) : super(message, "Unauthorised: ");
+}
+
+class InvalidInputException extends AppException {
+  InvalidInputException([String? message]) : super(message, "Invalid Input: ");
+}
