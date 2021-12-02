@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-void main() => runApp(MainApp());
+late final DateTime appStart;
+
+void main()
+{
+  // Init.
+  appStart = new DateTime.now();
+  runApp(MainApp());
+}
 
 class MainApp extends StatelessWidget
 {
@@ -32,7 +39,11 @@ class MainPageState extends State<MainPage>
       title: Text('This Week'),
       centerTitle: true,
     ),
-    body: Text('Hello'),
+    body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: createWeatherBoxes(),
+    ),
     bottomNavigationBar: BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: (index) => setState(() => currentIndex = index),
@@ -50,4 +61,9 @@ class MainPageState extends State<MainPage>
       ],
     ),
   );
+}
+
+List<Widget> createWeatherBoxes()
+{
+    return [];
 }
