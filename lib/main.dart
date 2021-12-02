@@ -17,7 +17,7 @@ class MainApp extends StatelessWidget
   Widget build(BuildContext context) => MaterialApp(
     title: 'Weather App',
     theme: ThemeData(primarySwatch: Colors.blue),
-    home: WeatherScreen(),
+    home: MainPage(title: 'Weather'),
   );
 }
 
@@ -39,11 +39,12 @@ class MainPageState extends State<MainPage>
       title: Text('This Week'),
       centerTitle: true,
     ),
-    body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: createWeatherBoxes(),
+    body: WeatherScreen(),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () {  },
+      child: Text('Add'),
     ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     bottomNavigationBar: BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: (index) => setState(() => currentIndex = index),
@@ -85,9 +86,8 @@ class _WeatherScreenState extends State<WeatherScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Movie Mania')),
-      body: RefreshIndicator(
+    return
+      RefreshIndicator(
         onRefresh: () => _bloc.fetchWeatherList(),
         child: StreamBuilder<ApiResponse<List<WeatherInfo>>>(
           stream: _bloc.weatherListStream,
@@ -110,8 +110,7 @@ class _WeatherScreenState extends State<WeatherScreen>
             return Container();
           },
         ),
-      ),
-    );
+      );
   }
 
   @override

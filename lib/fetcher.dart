@@ -68,43 +68,60 @@ class WeatherResponse
 
   WeatherResponse.fromJson(Map<String, dynamic> json)
   {
-    totalResults = json['cnt'];
-    if(json['list'] != null)
-      {
-        results = <WeatherInfo>[];
-        json['list'].forEach((v)
-        {
-          results.add(WeatherInfo.fromJson(v));
-        });
-      }
+    totalResults = 1;
+    results = <WeatherInfo>[];
+    results.add(WeatherInfo.fromJson(json));
   }
 }
 
 class WeatherInfo
 {
-  late int id;
+  late double long;
+  late double lat;
   late String main;
-  late String desc;
-  late String temp;
-  late String feelsLike;
-  late String tempMin;
-  late String tempMax;
-  late String humidity;
-  late String windSpeed;
-  late DateTime when;
+  late String descr;
+  late double temp;
+  late double feelsLike;
+  late int pressure;
+  late int humidity;
+  late double tempMin;
+  late double tempMax;
+  late double windSpeed;
+  late int windDeg;
+  double? rain1h;
+  double? rain3h;
+  late int clouds;
+  late DateTime dt;
+  late String cityName;
+
 
   WeatherInfo.fromJson(Map<String, dynamic> json)
   {
-    id = json['weather'][0]['id'];
+    print(json);
+    long = json['coord']['lon'];
+    lat = json['coord']['lat'];
     main = json['weather'][0]['main'];
-    desc = json['weather'][0]['description'];
+    descr = json['weather'][0]['description'];
     temp = json['main']['temp'];
     feelsLike = json['main']['feels_like'];
+    pressure = json['main']['pressure'];
+    print("Not yet");
+    humidity = json['main']['humidity'];
     tempMin = json['main']['temp_min'];
     tempMax = json['main']['temp_max'];
-    humidity = json['main']['humidity'];
     windSpeed = json['wind']['speed'];
-    when = DateTime.parse(json['dt_txt']);
+    print("Here");
+    windDeg = json['wind']['deg'];
+    if(json['rain'] != null)
+    {
+      rain1h = json['rain']['1h'];
+      rain3h = json['rain']['3h'];
+    }
+    clouds = json['clouds']['all'];
+    dt = DateTime.fromMillisecondsSinceEpoch(json['dt']);
+    print(dt);
+    cityName = json['name'];
+    print("Done");
   }
 
 }
