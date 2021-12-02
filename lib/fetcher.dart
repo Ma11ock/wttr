@@ -118,8 +118,8 @@ class WeatherInfo
       rain3h = json['rain']['3h'];
     }
     clouds = json['clouds']['all'];
-    dt = DateTime.fromMillisecondsSinceEpoch(json['dt']);
-    print(dt);
+    dt = DateTime.fromMillisecondsSinceEpoch(json['dt'] * 1000);
+    print('Got weather information for time $dt');
     cityName = json['name'];
     print("Done");
   }
@@ -178,17 +178,21 @@ class WeatherBloc
   Stream<ApiResponse<List<WeatherInfo>>> get weatherListStream =>
       _weatherListController.stream;
 
-  WeatherBloc()
+  WeatherBloc(List<String> cities)
   {
     _weatherRepository = WeatherRepository();
-    fetchWeatherList();
+    fetchWeatherList(cities);
   }
 
-  fetchWeatherList() async
+  fetchWeatherList(List<String> cities) async
   {
-    weatherListSink.add(ApiResponse.loading('Fetching Popular Weathers'));
+    weatherListSink.add(ApiResponse.loading('Fetching Weather'));
     try {
-      List<WeatherInfo> weathers = await _weatherRepository!.fetchWeatherList();
+      List<WeatherInfo> weathers = [];
+      for(String s in cities)
+      {
+        weathers += await _weatherRepository!.fetchWeatherList();
+      }
       weatherListSink.add(ApiResponse.completed(weathers));
     } catch (e) {
       weatherListSink.add(ApiResponse.error(e.toString()));

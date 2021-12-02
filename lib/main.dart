@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:wttr/fetcher.dart';
 
 late final DateTime appStart;
+
+List<String> citiesToList = <String>['Corvallis', 'Portland'];
 
 void main()
 {
@@ -41,8 +42,10 @@ class MainPageState extends State<MainPage>
     ),
     body: WeatherScreen(),
     floatingActionButton: FloatingActionButton(
-      onPressed: () {  },
-      child: Text('Add'),
+      onPressed: () {
+
+      },
+      child: Icon(Icons.add),
     ),
     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     bottomNavigationBar: BottomNavigationBar(
@@ -64,10 +67,6 @@ class MainPageState extends State<MainPage>
   );
 }
 
-List<Widget> createWeatherBoxes()
-{
-  return [];
-}
 
 class WeatherScreen extends StatefulWidget {
   @override
@@ -81,14 +80,14 @@ class _WeatherScreenState extends State<WeatherScreen>
   @override
   void initState() {
     super.initState();
-    _bloc = WeatherBloc();
+    _bloc = WeatherBloc(citiesToList);
   }
 
   @override
   Widget build(BuildContext context) {
     return
       RefreshIndicator(
-        onRefresh: () => _bloc.fetchWeatherList(),
+        onRefresh: () => _bloc.fetchWeatherList(citiesToList),
         child: StreamBuilder<ApiResponse<List<WeatherInfo>>>(
           stream: _bloc.weatherListStream,
           builder: (context, snapshot) {
@@ -103,7 +102,7 @@ class _WeatherScreenState extends State<WeatherScreen>
                   return WeatherList(weatherList: snapshot.data!.data);
                   break;
                 case Status.ERROR:
-                  return Error(errorMessage: snapshot.data!.message, onRetryPressed: () => _bloc.fetchWeatherList());
+                  return Error(errorMessage: snapshot.data!.message, onRetryPressed: () => _bloc.fetchWeatherList(citiesToList));
                   break;
               }
             }
