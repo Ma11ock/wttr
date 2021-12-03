@@ -17,15 +17,13 @@ const String RQST_STR3 = 'https://api.openweathermap.org/data/2.5/weather?q=%s,%
 
 class ApiBaseHelper
 {
-
-
 // Get weather data.
 Future<dynamic> get() async
 {
     var responseJson;
     try {
       final response = await http.get(
-          Uri.parse(sprintf(RQST_STR1, ['Corvallis', WTTR_KEY])));
+          Uri.parse(sprintf(RQST_STR2, ['Corvallis', 'Oregon', WTTR_KEY])));
       responseJson = _getWeatherList(response);
     }
     on SocketException

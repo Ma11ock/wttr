@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:wttr/fetcher.dart';
+import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 late final DateTime appStart;
 
 List<String> citiesToList = <String>['Corvallis', 'Portland'];
 
+String tempStandard = 'Celsius';
+
 void main()
 {
   // Init.
+  Settings.init();
   appStart = new DateTime.now();
   runApp(MainApp());
 }
@@ -43,7 +47,7 @@ class MainPageState extends State<MainPage>
     body: WeatherScreen(),
     floatingActionButton: FloatingActionButton(
       onPressed: () {
-
+        Navigator.push(context, SettingsPage());
       },
       child: Icon(Icons.add),
     ),
@@ -200,4 +204,52 @@ class Loading extends StatelessWidget {
       ),
     );
   }
+}
+
+class SettingsPage extends MaterialPageRoute<Null>
+{
+  SettingsPage() : super(builder: (BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 1.0,
+        title: Text('Settings'),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+        children: [
+          DropDownSettingsTile(
+            title: 'Measure',
+            settingKey: tempStandard,
+            selected: 1,
+            values: <int, String>{
+              1: 'Celsius',
+              2: 'Farenheit',
+              3: 'Kelvin',
+            },
+            onChange: (standard) {},
+          ),
+          ElevatedButton(
+          onPressed: () { Navigator.push(context, CitiesPage()); },
+          child: const Text('Edit Cities'),
+        ),
+      ],
+        ),
+      ),
+    );
+  });
+}
+class CitiesPage extends MaterialPageRoute<Null>
+{
+  CitiesPage() : super(builder: (BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 2.0,
+        title: Text('Edit Cities'),
+        centerTitle: true,
+      ),
+      body: Center(
+      ),
+    );
+  });
 }
