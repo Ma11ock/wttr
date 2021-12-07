@@ -2,33 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:wttr/fetcher.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
-late final DateTime appStart;
-
 List<String> citiesToList = <String>['Corvallis', 'Portland'];
-
 String tempStandard = 'Celsius';
 
 void main()
 {
   // Init.
-  Settings.init();
-  appStart = new DateTime.now();
-  runApp(MainApp());
+  Settings.init(cacheProvider: SharePreferenceCache());
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget
 {
+  const MainApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Weather App',
     theme: ThemeData(primarySwatch: Colors.blue),
-    home: MainPage(title: 'Weather'),
+    home: const MainPage(title: 'Weather'),
   );
 }
 
 class MainPage extends StatefulWidget
 {
-  MainPage({required this.title, Key? key}) : super(key: key);
+  const MainPage({required this.title, Key? key}) : super(key: key);
 
   @override
   MainPageState createState() => MainPageState();
@@ -41,15 +39,15 @@ class MainPageState extends State<MainPage>
   int currentIndex = 0;
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text('This Week'),
+      title: const Text('This Week'),
       centerTitle: true,
     ),
     body: WeatherScreen(),
     floatingActionButton: FloatingActionButton(
       onPressed: () {
-        Navigator.push(context, SettingsPage());
+        Navigator.push(context, SettingsPage()).then((value) => setState(() {}));
       },
-      child: Icon(Icons.add),
+      child: const Icon(Icons.add),
     ),
     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     bottomNavigationBar: BottomNavigationBar(
@@ -73,6 +71,8 @@ class MainPageState extends State<MainPage>
 
 
 class WeatherScreen extends StatefulWidget {
+  const WeatherScreen({Key? key}) : super(key: key);
+
   @override
   _WeatherScreenState createState() => _WeatherScreenState();
 }
@@ -123,23 +123,23 @@ class _WeatherScreenState extends State<WeatherScreen>
   }
 }
 
-class WeatherList extends StatelessWidget {
-  final List<WeatherInfo> weatherList;
+class WeatherList extends StatefulWidget {
+  List<WeatherInfo> weatherList;
 
-  const WeatherList({Key? key, required this.weatherList}) : super(key: key);
+  WeatherList({Key? key, required this.weatherList}) : super(key: key);
 
-  Widget createWeatherReport(WeatherInfo info)
-  {
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      // TODO start here
-      child: Column(),
+  @override
+  WeatherListState createState() => WeatherListState(weatherList: weatherList);
+}
 
-    );
-  }
+class WeatherListState extends State<WeatherList>
+{
+  List<WeatherInfo> weatherList;
+  WeatherListState({required this.weatherList});
 
   @override
   Widget build(BuildContext context) {
+    print("Lol");
     return Column(
       children: weatherList.map((weather) => Card(
         child: Column(
@@ -147,37 +147,21 @@ class WeatherList extends StatelessWidget {
           children: <Widget>[
             Icon(getWeatherIcon(weather)),
             Text(
-             weather.cityName,
+              weather.cityName,
               style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.grey[600]
+                  fontSize: 18.0,
+                  color: Colors.grey[600]
               ),
+            ),
+            Text(
+              'Current temperature: ${getTemp(weather.temp).toStringAsFixed(2)}',
             ),
           ],
         ),
       )).toList(),
     );
-    return GridView.builder(
-      itemCount: weatherList.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        childAspectRatio: 1.5 / 1.8,
-      ),
-      itemBuilder: (context, index) {
-        return Card(
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Icon(getWeatherIcon(weatherList[index])),
-            Text('It works for ${weatherList[index].cityName}'),
-          ],
-
-        ),
-        );
-
-      },
-    );
   }
+
 }
 
 class Error extends StatelessWidget {
@@ -197,15 +181,15 @@ class Error extends StatelessWidget {
           Text(
             errorMessage,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.lightGreen,
               fontSize: 18,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           RaisedButton(
             color: Colors.lightGreen,
-            child: Text('Retry', style: TextStyle(color: Colors.white)),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
             onPressed: onRetryPressed,
           )
         ],
@@ -228,13 +212,13 @@ class Loading extends StatelessWidget {
           Text(
             loadingMessage,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.lightGreen,
               fontSize: 24,
             ),
           ),
-          SizedBox(height: 24),
-          CircularProgressIndicator(
+          const SizedBox(height: 24),
+          const CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(Colors.lightGreen),
           ),
         ],
@@ -243,13 +227,13 @@ class Loading extends StatelessWidget {
   }
 }
 
-class SettingsPage extends MaterialPageRoute<Null>
+class SettingsPage extends MaterialPageRoute<void>
 {
   SettingsPage() : super(builder: (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 1.0,
-        title: Text('Settings'),
+        title: const Text('Settings'),
         centerTitle: true,
       ),
       body: Center(
@@ -259,12 +243,12 @@ class SettingsPage extends MaterialPageRoute<Null>
             title: 'Measure',
             settingKey: tempStandard,
             selected: 1,
-            values: <int, String>{
+            values: const <int, String>{
               1: 'Celsius',
-              2: 'Farenheit',
+              2: 'Fahrenheit',
               3: 'Kelvin',
             },
-            onChange: (standard) {},
+            onChange: (standard) { },
           ),
           ElevatedButton(
           onPressed: () { Navigator.push(context, CitiesPage()); },
@@ -278,16 +262,16 @@ class SettingsPage extends MaterialPageRoute<Null>
 }
 
 
-class CitiesPage extends MaterialPageRoute<Null>
+class CitiesPage extends MaterialPageRoute<void>
 {
   CitiesPage() : super(builder: (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 2.0,
-        title: Text('Edit Cities'),
+        title: const Text('Edit Cities'),
         centerTitle: true,
       ),
-      body: Center(
+      body: const Center(
       ),
     );
   });
@@ -303,7 +287,31 @@ IconData getWeatherIcon(WeatherInfo info)
     case 'Clouds':
       return Icons.cloud;
       break;
+    case 'Rain':
+      return Icons.grain;
+      break;
+    case 'Snow':
+      return Icons.snowboarding;
+      break;
   }
 
   return Icons.wb_sunny;
+}
+
+double getTemp(double kelvin) {
+  print("Blessus ${tempStandard}");
+  switch (tempStandard)
+  {
+    case 'Celsius':
+      return kelvin - 273.15;
+      break;
+    case 'Fahrenheit':
+      return (kelvin - 273.15) * (9.0/5.0) + 32.0;
+      break;
+    case 'Kelvin':
+      return kelvin;
+      break;
+  }
+
+  return kelvin;
 }
