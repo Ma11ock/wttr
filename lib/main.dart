@@ -273,13 +273,30 @@ class CitiesPage extends MaterialPageRoute<void>
   CitiesPage() : super(builder: (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 2.0,
-        title: const Text('Edit Cities'),
         centerTitle: true,
+        title: const Text("Cities")
       ),
-      body: const Center(
+      body: ValueChangeObserver<String>(
+        cacheKey: keyCitiesList,
+        defaultValue: "",
+        builder: (_, newCity, __)
+        {
+          if(newCity != "")
+            citiesToList.add(newCity);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: citiesToList.map((city) => Card(
+            child: Text(city),
+            )).toList(),
+          );
+        }
+      ),
+      bottomNavigationBar: TextInputSettingsTile(
+        title: 'Add City',
+        settingKey: keyCitiesList
       ),
     );
+
   });
 }
 
