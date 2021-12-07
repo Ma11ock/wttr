@@ -3,12 +3,14 @@ import 'package:wttr/fetcher.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
 List<String> citiesToList = <String>['Corvallis', 'Portland'];
-String tempStandard = 'Celsius';
+
+const String keyTempType = 'key-temp-type';
+const String keyCitiesList = 'key-cities-list';
 
 void main()
 {
   // Init.
-  Settings.init(cacheProvider: SharePreferenceCache());
+  Settings.init();
   runApp(const MainApp());
 }
 
@@ -42,7 +44,7 @@ class MainPageState extends State<MainPage>
       title: const Text('This Week'),
       centerTitle: true,
     ),
-    body: WeatherScreen(),
+    body: const WeatherScreen(),
     floatingActionButton: FloatingActionButton(
       onPressed: () {
         Navigator.push(context, SettingsPage()).then((value) => setState(() {}));
@@ -103,7 +105,11 @@ class _WeatherScreenState extends State<WeatherScreen>
                   break;
                 case Status.COMPLETED:
                   // Create this class too
-                  return WeatherList(weatherList: snapshot.data!.data);
+                  return ValueChangeObserver<String>(
+                      cacheKey: keyTempType,
+                      defaultValue: 'Celsius',
+                      builder: (_, tempType, __) => WeatherList(weatherList: snapshot.data!.data, tempType: tempType),
+                  );
                   break;
                 case Status.ERROR:
                   return Error(errorMessage: snapshot.data!.message, onRetryPressed: () => _bloc.fetchWeatherList(citiesToList));
@@ -123,23 +129,24 @@ class _WeatherScreenState extends State<WeatherScreen>
   }
 }
 
-class WeatherList extends StatefulWidget {
-  List<WeatherInfo> weatherList;
+class WeatherList extends StatelessWidget {
+  final List<WeatherInfo> weatherList;
+  final String tempType;
 
-  WeatherList({Key? key, required this.weatherList}) : super(key: key);
+  const WeatherList({Key? key, required this.weatherList, required this.tempType}) : super(key: key);
 
-  @override
-  WeatherListState createState() => WeatherListState(weatherList: weatherList);
-}
+  Widget createWeatherReport(WeatherInfo info)
+  {
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      // TODO start here
+      child: Column(),
 
-class WeatherListState extends State<WeatherList>
-{
-  List<WeatherInfo> weatherList;
-  WeatherListState({required this.weatherList});
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    print("Lol");
     return Column(
       children: weatherList.map((weather) => Card(
         child: Column(
@@ -147,21 +154,20 @@ class WeatherListState extends State<WeatherList>
           children: <Widget>[
             Icon(getWeatherIcon(weather)),
             Text(
-              weather.cityName,
+             weather.cityName,
               style: TextStyle(
-                  fontSize: 18.0,
-                  color: Colors.grey[600]
+                fontSize: 18.0,
+                color: Colors.grey[600]
               ),
             ),
             Text(
-              'Current temperature: ${getTemp(weather.temp).toStringAsFixed(2)}',
+              'Current temperature: ${getTemp(weather.temp, tempType).toStringAsFixed(2)}',
             ),
           ],
         ),
       )).toList(),
     );
   }
-
 }
 
 class Error extends StatelessWidget {
@@ -239,14 +245,14 @@ class SettingsPage extends MaterialPageRoute<void>
       body: Center(
         child: Column(
         children: [
-          DropDownSettingsTile(
+          DropDownSettingsTile<String>(
             title: 'Measure',
-            settingKey: tempStandard,
-            selected: 1,
-            values: const <int, String>{
-              1: 'Celsius',
-              2: 'Fahrenheit',
-              3: 'Kelvin',
+            settingKey: keyTempType,
+            selected: 'Celsius',
+            values: const <String, String>{
+              'Celsius' : 'Celsius',
+              'Fahrenheit' : 'Fahrenheit',
+              'Kelvin' : 'Kelvin',
             },
             onChange: (standard) { },
           ),
@@ -298,8 +304,7 @@ IconData getWeatherIcon(WeatherInfo info)
   return Icons.wb_sunny;
 }
 
-double getTemp(double kelvin) {
-  print("Blessus ${tempStandard}");
+double getTemp(double kelvin, String tempStandard) {
   switch (tempStandard)
   {
     case 'Celsius':
