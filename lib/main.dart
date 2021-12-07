@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wttr/fetcher.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
-List<String> citiesToList = <String>['Portland'];
+List<String> citiesToList = <String>['Portland', 'Corvallis'];
 
 const String keyTempType = 'key-temp-type';
 const String keyCitiesList = 'key-cities-list';
@@ -139,6 +139,10 @@ class _WeatherScreenState extends State<WeatherScreen>
   }
 }
 
+final TextStyle infoTextStyle = TextStyle(
+    fontSize: 18.0,
+    color: Colors.grey[600]
+);
 class WeatherList extends StatelessWidget {
   final List<WeatherInfo> weatherList;
   final String tempType;
@@ -163,16 +167,31 @@ class WeatherList extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Icon(getWeatherIcon(weather)),
+            Center(child: Text('${weather.descr}, ${getCloudiness(weather.clouds)}', style: infoTextStyle),),
             Text(
-             weather.cityName,
-              style: TextStyle(
-                fontSize: 18.0,
-                color: Colors.grey[600]
+              weather.cityName,
+              style: const TextStyle(
+                  fontSize: 24.0,
               ),
             ),
             Text(
-              'Current temperature: ${getTemp(weather.temp, tempType).toStringAsFixed(2)}',
+              'Current temperature: ${getTemp(weather.temp, tempType)}',
+              style: infoTextStyle,
             ),
+            Text(
+              'Daily Low: ${getTemp(weather.tempMin, tempType)}; '
+                  'Daily High: ${getTemp(weather.tempMax, tempType)}',
+                  style: infoTextStyle
+            ),
+            Text(
+                'Pressure: ${doubleToFixed(weather.pressure)}\nHumidity: ${doubleToFixed(weather.humidity) + "%"}',
+                style: infoTextStyle,
+            ),
+            Text(
+              'Wind: ${doubleToFixed(weather.windSpeed)}m/s @ ${doubleToFixed(weather.windDeg)}°',
+                  style: infoTextStyle
+            )
+            
           ],
         ),
       )).toList(),
@@ -288,15 +307,20 @@ class CitiesPage extends MaterialPageRoute<void>
       ),
       body: ValueChangeObserver<String>(
         cacheKey: keyCitiesList,
-        defaultValue: "Corvallis",
+        defaultValue: "",
         builder: (_, newCity, __)
         {
-          if(newCity != "" && !citiesToList.contains(newCity))
-            citiesToList.add(newCity);
+          if(newCity != "" && !citiesToList.contains(newCity)) {
+            if (newCity[0] == '-')
+              citiesToList.remove(newCity.substring(1));
+            else
+              citiesToList.add(newCity);
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: citiesToList.map((city) => Card(
-            child: Text(city),
+                child: Text(city),
             )).toList(),
           );
         }
@@ -331,19 +355,40 @@ IconData getWeatherIcon(WeatherInfo info)
   return Icons.wb_sunny;
 }
 
-double getTemp(double kelvin, String tempStandard) {
+String getTemp(double kelvin, String tempStandard) {
+  String result;
   switch (tempStandard)
   {
     case 'Celsius':
-      return kelvin - 273.15;
+      result = doubleToFixed(kelvin - 273.15) + "°C";
       break;
     case 'Fahrenheit':
-      return (kelvin - 273.15) * (9.0/5.0) + 32.0;
+      result = doubleToFixed((kelvin - 273.15) * (9.0/5.0) + 32.0) + "°F";
       break;
-    case 'Kelvin':
-      return kelvin;
+    default:
+      result = doubleToFixed(kelvin) + "°K";
       break;
   }
 
-  return kelvin;
+  return result;
+}
+
+String getCloudiness(double cloudPercent)
+{
+  if(cloudPercent >= 0.0 && cloudPercent <= 20.0)
+    return "sunny";
+  else if(cloudPercent >= 20.0 && cloudPercent < 30.0)
+    return "mostly sunny";
+  else if(cloudPercent >= 30.0 && cloudPercent < 50.0)
+    return "partly cloudy";
+  else if(cloudPercent >= 50.0 && cloudPercent < 70.0)
+    return "mostly cloudy";
+  else if(cloudPercent >= 70.0 && cloudPercent <= 100.0)
+    return "cloudy";
+  return "";
+}
+
+String doubleToFixed(double d)
+{
+  return d.toStringAsFixed(2);
 }
