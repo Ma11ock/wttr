@@ -128,6 +128,16 @@ class WeatherList extends StatelessWidget {
 
   const WeatherList({Key? key, required this.weatherList}) : super(key: key);
 
+  Widget createWeatherReport(WeatherInfo info)
+  {
+    return Card(
+      margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
+      // TODO start here
+      child: Column(),
+
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -137,7 +147,7 @@ class WeatherList extends StatelessWidget {
         childAspectRatio: 1.5 / 1.8,
       ),
       itemBuilder: (context, index) {
-        return Text('so far it works');
+        return Text('so far it works for ${weatherList[index].cityName}');
       },
     );
   }
@@ -239,6 +249,8 @@ class SettingsPage extends MaterialPageRoute<Null>
     );
   });
 }
+
+
 class CitiesPage extends MaterialPageRoute<Null>
 {
   CitiesPage() : super(builder: (BuildContext context) {

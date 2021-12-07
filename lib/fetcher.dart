@@ -18,12 +18,12 @@ const String RQST_STR3 = 'https://api.openweathermap.org/data/2.5/weather?q=%s,%
 class ApiBaseHelper
 {
 // Get weather data.
-Future<dynamic> get() async
+Future<dynamic> get(String cityName) async
 {
     var responseJson;
     try {
       final response = await http.get(
-          Uri.parse(sprintf(RQST_STR2, ['Corvallis', 'Oregon', WTTR_KEY])));
+          Uri.parse(sprintf(RQST_STR2, [cityName, 'Oregon', WTTR_KEY])));
       responseJson = _getWeatherList(response);
     }
     on SocketException
@@ -158,8 +158,8 @@ class WeatherRepository
 {
   ApiBaseHelper _helper = ApiBaseHelper();
 
-  Future<List<WeatherInfo>> fetchWeatherList() async {
-    final response = await _helper.get();
+  Future<List<WeatherInfo>> fetchWeatherList(String city) async {
+    final response = await _helper.get(city);
     return WeatherResponse.fromJson(response).results;
   }
 }
@@ -189,7 +189,7 @@ class WeatherBloc
       List<WeatherInfo> weathers = [];
       for(String s in cities)
       {
-        weathers += await _weatherRepository!.fetchWeatherList();
+        weathers += await _weatherRepository!.fetchWeatherList(s);
       }
       weatherListSink.add(ApiResponse.completed(weathers));
     } catch (e) {
