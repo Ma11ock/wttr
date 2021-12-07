@@ -80,15 +80,15 @@ class WeatherInfo
   late String descr;
   late double temp;
   late double feelsLike;
-  late int pressure;
-  late int humidity;
+  late double pressure;
+  late double humidity;
   late double tempMin;
   late double tempMax;
   late double windSpeed;
-  late int windDeg;
+  late double windDeg;
   double? rain1h;
   double? rain3h;
-  late int clouds;
+  late double clouds;
   late DateTime dt;
   late String cityName;
 
@@ -96,30 +96,26 @@ class WeatherInfo
   WeatherInfo.fromJson(Map<String, dynamic> json)
   {
     print(json);
-    long = json['coord']['lon'];
-    lat = json['coord']['lat'];
+    long = toDob(json['coord']['lon']);
+    lat = toDob(json['coord']['lat']);
     main = json['weather'][0]['main'];
     descr = json['weather'][0]['description'];
-    temp = json['main']['temp'];
-    feelsLike = json['main']['feels_like'];
-    pressure = json['main']['pressure'];
-    print("Not yet");
-    humidity = json['main']['humidity'];
-    tempMin = json['main']['temp_min'];
-    tempMax = json['main']['temp_max'];
-    windSpeed = json['wind']['speed'];
-    print("Here");
-    windDeg = json['wind']['deg'];
+    temp = toDob(json['main']['temp']);
+    feelsLike = toDob(json['main']['feels_like']);
+    pressure = toDob(json['main']['pressure']);
+    humidity = toDob(json['main']['humidity']);
+    tempMin = toDob(json['main']['temp_min']);
+    tempMax = toDob(json['main']['temp_max']);
+    windSpeed = toDob(json['wind']['speed']);
+    windDeg = toDob(json['wind']['deg']);
     if(json['rain'] != null)
     {
-      rain1h = json['rain']['1h'];
-      rain3h = json['rain']['3h'];
+      rain1h = toDob(json['rain']['1h']);
+      rain3h = toDob(json['rain']['3h']);
     }
-    clouds = json['clouds']['all'];
+    clouds = toDob(json['clouds']['all']);
     dt = DateTime.fromMillisecondsSinceEpoch(json['dt'] * 1000);
-    print('Got weather information for time $dt');
     cityName = json['name'];
-    print("Done");
   }
 
 }
@@ -219,4 +215,13 @@ class UnauthorisedException extends AppException {
 
 class InvalidInputException extends AppException {
   InvalidInputException([String? message]) : super(message, "Invalid Input: ");
+}
+
+double toDob(dynamic number)
+{
+  if(number is int)
+      return number.toDouble();
+  else if(number is double)
+      return number;
+  return 0.0;
 }

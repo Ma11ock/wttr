@@ -131,7 +131,7 @@ class WeatherList extends StatelessWidget {
   Widget createWeatherReport(WeatherInfo info)
   {
     return Card(
-      margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       // TODO start here
       child: Column(),
 
@@ -140,14 +140,41 @@ class WeatherList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: weatherList.map((weather) => Card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Icon(getWeatherIcon(weather)),
+            Text(
+             weather.cityName,
+              style: TextStyle(
+                fontSize: 18.0,
+                color: Colors.grey[600]
+              ),
+            ),
+          ],
+        ),
+      )).toList(),
+    );
     return GridView.builder(
       itemCount: weatherList.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 1,
         childAspectRatio: 1.5 / 1.8,
       ),
       itemBuilder: (context, index) {
-        return Text('so far it works for ${weatherList[index].cityName}');
+        return Card(
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Icon(getWeatherIcon(weatherList[index])),
+            Text('It works for ${weatherList[index].cityName}'),
+          ],
+
+        ),
+        );
+
       },
     );
   }
@@ -264,4 +291,19 @@ class CitiesPage extends MaterialPageRoute<Null>
       ),
     );
   });
+}
+
+IconData getWeatherIcon(WeatherInfo info)
+{
+  switch(info.main)
+  {
+    case 'Clear':
+      return Icons.wb_sunny;
+      break;
+    case 'Clouds':
+      return Icons.cloud;
+      break;
+  }
+
+  return Icons.wb_sunny;
 }
