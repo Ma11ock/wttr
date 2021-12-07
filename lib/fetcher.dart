@@ -91,10 +91,16 @@ class WeatherInfo
   late double clouds;
   late DateTime dt;
   late String cityName;
+  bool isError = false;
 
 
   WeatherInfo.fromJson(Map<String, dynamic> json)
   {
+    if(json["cod"] == 404)
+    {
+      isError = true;
+      return;
+    }
     print(json);
     long = toDob(json['coord']['lon']);
     lat = toDob(json['coord']['lat']);

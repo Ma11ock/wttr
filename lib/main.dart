@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wttr/fetcher.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
-List<String> citiesToList = <String>['Corvallis', 'Portland'];
+List<String> citiesToList = <String>['Portland'];
 
 const String keyTempType = 'key-temp-type';
 const String keyCitiesList = 'key-cities-list';
@@ -44,7 +44,7 @@ class MainPageState extends State<MainPage>
       title: const Text('This Week'),
       centerTitle: true,
     ),
-    body: const WeatherScreen(),
+    body: WeatherScreen(key: UniqueKey()),
     floatingActionButton: FloatingActionButton(
       onPressed: () {
         Navigator.push(context, SettingsPage()).then((value) => setState(() {}));
@@ -54,7 +54,17 @@ class MainPageState extends State<MainPage>
     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     bottomNavigationBar: BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: (index) => setState(() => currentIndex = index),
+      onTap: (index) => setState(() {
+        currentIndex = index;
+        switch(index)
+        {
+          case 1:
+            // TODO to grah.
+            break;
+          default:
+            break;
+        }
+      }),
       items: const [
         BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -278,10 +288,10 @@ class CitiesPage extends MaterialPageRoute<void>
       ),
       body: ValueChangeObserver<String>(
         cacheKey: keyCitiesList,
-        defaultValue: "",
+        defaultValue: "Corvallis",
         builder: (_, newCity, __)
         {
-          if(newCity != "")
+          if(newCity != "" && !citiesToList.contains(newCity))
             citiesToList.add(newCity);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
