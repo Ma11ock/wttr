@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:wttr/fetcher.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 
@@ -6,6 +7,8 @@ List<String> citiesToList = <String>['Portland', 'Corvallis'];
 
 const String keyTempType = 'key-temp-type';
 const String keyCitiesList = 'key-cities-list';
+
+List<WeatherInfo> totalWeather = <WeatherInfo>[];
 
 void main()
 {
@@ -59,7 +62,7 @@ class MainPageState extends State<MainPage>
         switch(index)
         {
           case 1:
-            // TODO to grah.
+            Navigator.push(context, GraphPage());
             break;
           default:
             break;
@@ -147,7 +150,13 @@ class WeatherList extends StatelessWidget {
   final List<WeatherInfo> weatherList;
   final String tempType;
 
-  const WeatherList({Key? key, required this.weatherList, required this.tempType}) : super(key: key);
+  WeatherList({Key? key, required this.weatherList, required this.tempType}) : super(key: key)
+  {
+    for (var element in weatherList) {
+      if(!totalWeather.contains(element))
+        totalWeather.add(element);
+    }
+  }
 
   Widget createWeatherReport(WeatherInfo info)
   {
@@ -184,7 +193,7 @@ class WeatherList extends StatelessWidget {
                   style: infoTextStyle
             ),
             Text(
-                'Pressure: ${doubleToFixed(weather.pressure)}\nHumidity: ${doubleToFixed(weather.humidity) + "%"}',
+                'Pressure: ${doubleToFixed(weather.pressure)}\nHumidity: ${doubleToFixed(weather.humidity)}%',
                 style: infoTextStyle,
             ),
             Text(
@@ -296,6 +305,31 @@ class SettingsPage extends MaterialPageRoute<void>
   });
 }
 
+class GraphPage extends MaterialPageRoute<void>
+{
+
+  GraphPage() : super(builder: (BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+         centerTitle: true,
+         title: const Text('Graphs')
+        ),
+        body: SfCartesianChart(
+          title: ChartTitle(text: 'Temperature (°Kelvin) vs\nCity'),
+          primaryXAxis: CategoryAxis(),
+          series: <ScatterSeries<WeatherInfo, String>>[
+            ScatterSeries<WeatherInfo, String>(
+              dataSource: totalWeather,
+              xValueMapper: (WeatherInfo data, _) => data.cityName,
+              yValueMapper: (WeatherInfo data, _) => data.temp,
+            )
+          ],
+        ),
+    ),
+    );
+  });
+}
 
 class CitiesPage extends MaterialPageRoute<void>
 {
